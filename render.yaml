@@ -8,13 +8,13 @@ services:
     startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
     workingDirectory: .
     envVars:
-    - key: DB_HOST
-      value: 192.168.102.232    # Your computer's IP
-    - key: DB_NAME
-      value: CompanyAI           # Your actual database name
-    - key: DB_USER
-      value: postgres
-    - key: DB_PASSWORD
-      value: password
-    - key: DB_PORT
-      value: 5432
+      - key: DB_HOST
+        value: 192.168.102.232
+      - key: DB_NAME
+        value: CompanyAI
+      - key: DB_USER
+        value: postgres
+      - key: DB_PASSWORD
+        value: password
+      - key: DB_PORT
+        value: 5432
