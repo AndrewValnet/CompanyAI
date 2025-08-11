@@ -9,9 +9,9 @@ services:
     workingDirectory: .
     envVars:
       - key: DB_HOST
-        value: dpg-d2d591k9c44c73c14tn0-a
+        value: dpg-d2d591k9c44c73c14tn0-a.oregon-postgres.render.com
       - key: DB_NAME
-        value: CompanyAI
+        value: companyai
       - key: DB_USER
         value: valnet
       - key: DB_PASSWORD
