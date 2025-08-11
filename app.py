@@ -34,7 +34,7 @@ app.add_middleware(
 def get_db_connection():
     return psycopg.connect(
         host=os.getenv("DB_HOST", "localhost"),
-        database=os.getenv("DB_NAME", "CompanyAI"),
+        dbname=os.getenv("DB_NAME", "CompanyAI"),
         user=os.getenv("DB_USER", "postgres"),
         password=os.getenv("DB_PASSWORD", "password"),
         port=int(os.getenv("DB_PORT", "5432"))
