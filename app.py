@@ -32,13 +32,28 @@ app.add_middleware(
 
 # Database connection
 def get_db_connection():
-    return psycopg.connect(
-        host=os.getenv("DB_HOST", "localhost"),
-        dbname=os.getenv("DB_NAME", "CompanyAI"),
-        user=os.getenv("DB_USER", "postgres"),
-        password=os.getenv("DB_PASSWORD", "password"),
-        port=int(os.getenv("DB_PORT", "5432"))
-    )
+    host = os.getenv("DB_HOST", "localhost")
+    dbname = os.getenv("DB_NAME", "CompanyAI")
+    user = os.getenv("DB_USER", "postgres")
+    password = os.getenv("DB_PASSWORD", "password")
+    port = int(os.getenv("DB_PORT", "5432"))
+    
+    print(f"Attempting to connect to database: {host}:{port}/{dbname} as {user}")
+    
+    try:
+        conn = psycopg.connect(
+            host=host,
+            dbname=dbname,
+            user=user,
+            password=password,
+            port=port,
+            connect_timeout=10  # 10 second timeout
+        )
+        print("Database connection successful!")
+        return conn
+    except Exception as e:
+        print(f"Database connection failed: {e}")
+        raise
 
 @app.get("/", response_class=HTMLResponse)
 async def root():

@@ -9,11 +9,11 @@ services:
     workingDirectory: .
     envVars:
       - key: DB_HOST
-        value: 192.168.102.232
+        value: dpg-d2d591k9c44c73c14tn0-a
       - key: DB_NAME
         value: CompanyAI
       - key: DB_USER
-        value: postgres
+        value: valnet
       - key: DB_PASSWORD
         value: password
       - key: DB_PORT
