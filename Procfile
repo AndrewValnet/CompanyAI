@@ -1,1 +1,1 @@
-web: uvicorn gpt_api_endpoints:app --host 0.0.0.0 --port $PORT
+web: gunicorn -k uvicorn.workers.UvicornWorker -b 0.0.0.0:$PORT main:app
