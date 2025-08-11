@@ -5,7 +5,7 @@ services:
     plan: free
     pythonVersion: "3.9.16"
     buildCommand: pip install -r CompanyAI/requirements.txt
-    startCommand: gunicorn your_application.wsgi
+    startCommand: gunicorn -k uvicorn.workers.UvicornWorker your_application.wsgi
     workingDirectory: .
     envVars:
       - key: PYTHON_VERSION
