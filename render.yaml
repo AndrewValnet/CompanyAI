@@ -15,6 +15,6 @@ services:
       - key: DB_USER
         value: valnet
       - key: DB_PASSWORD
-        value: password
+        value: am40qUX160n19xJq1m5a8eYvgbYrXMMq
       - key: DB_PORT
         value: 5432
