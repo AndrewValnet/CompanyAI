@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-import psycopg2
-from psycopg2.extras import RealDictCursor
+import psycopg
+from psycopg.rows import dict_row
 from typing import List, Optional
 import os
 from dotenv import load_dotenv
@@ -33,7 +33,7 @@ app.add_middleware(
 
 # Database connection
 def get_db_connection():
-    return psycopg2.connect(
+    return psycopg.connect(
         host=os.getenv("DB_HOST", "localhost"),
         database=os.getenv("DB_NAME", "CompanyAI"),
         user=os.getenv("DB_USER", "postgres"),
@@ -54,7 +54,7 @@ async def search_companies_gpt(
     """
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cursor = conn.cursor(row_factory=dict_row)
         
         # Build the query dynamically
         sql = """
@@ -133,7 +133,7 @@ async def get_reached_out_companies_gpt(
     """
     try:
         conn = get_db_connection()
-        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cursor = conn.cursor(row_factory=dict_row)
         
         sql = """
             SELECT 
@@ -177,7 +177,7 @@ async def get_database_stats_gpt():
     """
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = conn.cursor(row_factory=dict_row)
         
         # Get counts
         cursor.execute("SELECT COUNT(*) FROM all_companies")
