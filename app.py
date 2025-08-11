@@ -47,7 +47,8 @@ def get_db_connection():
             user=user,
             password=password,
             port=port,
-            connect_timeout=10  # 10 second timeout
+            connect_timeout=10,  # 10 second timeout
+            sslmode="disable"    # Disable SSL for Render database
         )
         print("Database connection successful!")
         return conn
