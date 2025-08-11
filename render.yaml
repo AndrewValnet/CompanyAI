@@ -11,12 +11,12 @@ services:
       - key: PYTHON_VERSION
         value: 3.9.16
       - key: DB_HOST
-        value: your-actual-db-host
+        value: dpg-d2d591k9c44c73c14tn0-a
       - key: DB_NAME
-        value: your-actual-db-name
+        value: companyai
       - key: DB_USER
-        value: your-actual-db-user
+        value: valnet
       - key: DB_PASSWORD
-        value: your-actual-db-password
+        value: password
       - key: DB_PORT
         value: 5432
