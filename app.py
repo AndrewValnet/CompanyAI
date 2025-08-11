@@ -257,6 +257,52 @@ async def get_database_stats_gpt():
             "message": "Failed to get database stats"
         }
 
+@app.get("/companies")
+async def get_all_companies(
+    limit: int = Query(50, description="Number of companies to return"),
+    offset: int = Query(0, description="Number of companies to skip")
+):
+    """Get all companies with pagination"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(row_factory=dict_row)
+        
+        # Get total count
+        cursor.execute("SELECT COUNT(*) as total FROM all_companies")
+        total_count = cursor.fetchone()["total"]
+        
+        # Get companies with pagination
+        sql = """
+            SELECT 
+                name, website, vertical, subvertical, description, location,
+                monthly_visits, unique_visitors, pages_per_visit, adsense_enabled
+            FROM all_companies 
+            ORDER BY monthly_visits DESC NULLS LAST, name ASC
+            LIMIT %s OFFSET %s
+        """
+        
+        cursor.execute(sql, (limit, offset))
+        companies = cursor.fetchall()
+        
+        cursor.close()
+        conn.close()
+        
+        return {
+            "success": True,
+            "total_companies": total_count,
+            "returned_companies": len(companies),
+            "limit": limit,
+            "offset": offset,
+            "companies": companies
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "message": "Failed to get companies"
+        }
+
 @app.get("/gpt/health")
 async def gpt_health():
     """GPT health check endpoint"""
