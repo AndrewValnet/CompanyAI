@@ -5,8 +5,8 @@ services:
     plan: free
     pythonVersion: "3.9.16"
     buildCommand: pip install -r CompanyAI/requirements.txt
-    startCommand: gunicorn -k uvicorn.workers.UvicornWorker -w 2 -b 0.0.0.0:$PORT CompanyAI.gpt_api_endpoints:app
-    workingDirectory: CompanyAI
+    startCommand: gunicorn -k uvicorn.workers.UvicornWorker -w 2 -b 0.0.0.0:$PORT wsgi:application
+    workingDirectory: .
     envVars:
       - key: PYTHON_VERSION
         value: 3.9.16
