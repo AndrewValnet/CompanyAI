@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: company-database-gpt-api
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn gpt_api_endpoints:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11
+      - key: DB_HOST
+        value: localhost
+      - key: DB_NAME
+        value: CompanyAI
+      - key: DB_USER
+        value: postgres
+      - key: DB_PASSWORD
+        value: password
+      - key: DB_PORT
+        value: 5432

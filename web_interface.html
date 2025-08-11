@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Management System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .search-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .search-input {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+        .search-button {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .search-button:hover {
+            background: #ff5252;
+        }
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .filter-input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .company-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .company-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .company-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+        .company-domain {
+            color: #666;
+            font-family: monospace;
+        }
+        .company-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .detail-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        .detail-value {
+            font-size: 14px;
+            color: #333;
+        }
+        .company-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .action-button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        .btn-interested {
+            background: #4caf50;
+            color: white;
+        }
+        .btn-interested:hover {
+            background: #45a049;
+        }
+        .btn-reached {
+            background: #2196f3;
+            color: white;
+        }
+        .btn-reached:hover {
+            background: #1976d2;
+        }
+        .btn-remove {
+            background: #f44336;
+            color: white;
+        }
+        .btn-remove:hover {
+            background: #d32f2f;
+        }
+        .similarity-score {
+            background: #ff9800;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .lists-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .list-container {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .list-header {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ddd;
+        }
+        .list-count {
+            background: #666;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .success {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        @media (max-width: 768px) {
+            .lists-section {
+                grid-template-columns: 1fr;
+            }
+            .filters {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Company Management System</h1>
+    
+    <div class="search-section">
+        <h2>AI-Powered Company Search</h2>
+        <input type="text" id="searchInput" class="search-input" placeholder="Describe the type of companies you're looking for... (e.g., 'E-commerce companies using React with high traffic')" />
+        <div class="filters">
+            <input type="number" id="minVisits" class="filter-input" placeholder="Min visits" />
+            <input type="number" id="maxResults" class="filter-input" placeholder="Max results" value="20" />
+            <label style="color: white;">
+                <input type="checkbox" id="excludeReachedOut" checked /> Exclude reached out companies
+            </label>
+        </div>
+        <button onclick="searchCompanies()" class="search-button">Search Companies</button>
+    </div>
+
+    <div id="messageContainer"></div>
+    
+    <div id="searchResults" class="container" style="display: none;">
+        <h3>Search Results</h3>
+        <div id="resultsList"></div>
+    </div>
+
+    <div class="lists-section">
+        <div class="list-container">
+            <div class="list-header">
+                Interested Companies <span class="list-count" id="interestedCount">0</span>
+            </div>
+            <div id="interestedList"></div>
+        </div>
+        
+        <div class="list-container">
+            <div class="list-header">
+                Reached Out Companies <span class="list-count" id="reachedOutCount">0</span>
+            </div>
+            <div id="reachedOutList"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        
+        // Show message
+        function showMessage(message, type = 'success') {
+            const container = document.getElementById('messageContainer');
+            container.innerHTML = `<div class="${type}">${message}</div>`;
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 5000);
+        }
+
+        // Search companies
+        async function searchCompanies() {
+            const prompt = document.getElementById('searchInput').value.trim();
+            if (!prompt) {
+                showMessage('Please enter a search prompt', 'error');
+                return;
+            }
+
+            const minVisits = document.getElementById('minVisits').value;
+            const maxResults = document.getElementById('maxResults').value;
+            const excludeReachedOut = document.getElementById('excludeReachedOut').checked;
+
+            const request = {
+                prompt: prompt,
+                min_visits: minVisits ? parseInt(minVisits) : null,
+                limit: parseInt(maxResults) || 20,
+                exclude_reached_out: excludeReachedOut
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/search`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(request)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const companies = await response.json();
+                displaySearchResults(companies);
+                showMessage(`Found ${companies.length} companies`);
+            } catch (error) {
+                console.error('Search error:', error);
+                showMessage(`Search failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Display search results
+        function displaySearchResults(companies) {
+            const container = document.getElementById('searchResults');
+            const resultsList = document.getElementById('resultsList');
+            
+            if (companies.length === 0) {
+                resultsList.innerHTML = '<div class="loading">No companies found matching your criteria.</div>';
+            } else {
+                resultsList.innerHTML = companies.map(company => createCompanyCard(company, 'search')).join('');
+            }
+            
+            container.style.display = 'block';
+        }
+
+        // Create company card
+        function createCompanyCard(company, context) {
+            const similarityScore = company.similarity_score ? 
+                `<span class="similarity-score">${(company.similarity_score * 100).toFixed(1)}% match</span>` : '';
+            
+            const actions = context === 'search' ? `
+                <button class="action-button btn-interested" onclick="addToList('interested', '${company.domain}')">
+                    Add to Interested
+                </button>
+            ` : context === 'interested' ? `
+                <button class="action-button btn-reached" onclick="promoteCompany('${company.domain}')">
+                    Mark as Reached Out
+                </button>
+                <button class="action-button btn-remove" onclick="removeFromList('interested', '${company.domain}')">
+                    Remove
+                </button>
+            ` : `
+                <button class="action-button btn-remove" onclick="removeFromList('reached_out', '${company.domain}')">
+                    Remove
+                </button>
+            `;
+
+            return `
+                <div class="company-card">
+                    <div class="company-header">
+                        <div>
+                            <div class="company-name">${company.name || 'Unknown'}</div>
+                            <div class="company-domain">${company.domain}</div>
+                        </div>
+                        ${similarityScore}
+                    </div>
+                    <div class="company-details">
+                        <div class="detail-item">
+                            <div class="detail-label">Industry</div>
+                            <div class="detail-value">${company.industry || 'N/A'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Country</div>
+                            <div class="detail-value">${company.country || 'N/A'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Employees</div>
+                            <div class="detail-value">${company.employee_range || 'N/A'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Monthly Visits</div>
+                            <div class="detail-value">${company.visits ? company.visits.toLocaleString() : 'N/A'}</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Tech Stack</div>
+                            <div class="detail-value">${company.tech_tags ? company.tech_tags.join(', ') : 'N/A'}</div>
+                        </div>
+                    </div>
+                    <div class="company-actions">
+                        ${actions}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Add company to list
+        async function addToList(listSlug, domain) {
+            try {
+                const response = await fetch(`${API_BASE}/lists/${listSlug}/add`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        domain: domain,
+                        user: 'web_user'
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                showMessage(result.message);
+                loadLists();
+            } catch (error) {
+                console.error('Add to list error:', error);
+                showMessage(`Failed to add company: ${error.message}`, 'error');
+            }
+        }
+
+        // Remove company from list
+        async function removeFromList(listSlug, domain) {
+            try {
+                const response = await fetch(`${API_BASE}/lists/${listSlug}/remove`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        domain: domain,
+                        user: 'web_user'
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                showMessage(result.message);
+                loadLists();
+            } catch (error) {
+                console.error('Remove from list error:', error);
+                showMessage(`Failed to remove company: ${error.message}`, 'error');
+            }
+        }
+
+        // Promote company
+        async function promoteCompany(domain) {
+            try {
+                const response = await fetch(`${API_BASE}/promote/${domain}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        domain: domain,
+                        user: 'web_user'
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                showMessage(result.message);
+                loadLists();
+            } catch (error) {
+                console.error('Promote company error:', error);
+                showMessage(`Failed to promote company: ${error.message}`, 'error');
+            }
+        }
+
+        // Load lists
+        async function loadLists() {
+            try {
+                // Load interested companies
+                const interestedResponse = await fetch(`${API_BASE}/lists/interested`);
+                if (interestedResponse.ok) {
+                    const interestedData = await interestedResponse.json();
+                    document.getElementById('interestedList').innerHTML = 
+                        interestedData.companies.map(company => createCompanyCard(company, 'interested')).join('') ||
+                        '<div class="loading">No companies in interested list</div>';
+                    document.getElementById('interestedCount').textContent = interestedData.total;
+                }
+
+                // Load reached out companies
+                const reachedOutResponse = await fetch(`${API_BASE}/lists/reached_out`);
+                if (reachedOutResponse.ok) {
+                    const reachedOutData = await reachedOutResponse.json();
+                    document.getElementById('reachedOutList').innerHTML = 
+                        reachedOutData.companies.map(company => createCompanyCard(company, 'reached_out')).join('') ||
+                        '<div class="loading">No companies in reached out list</div>';
+                    document.getElementById('reachedOutCount').textContent = reachedOutData.total;
+                }
+            } catch (error) {
+                console.error('Load lists error:', error);
+                showMessage(`Failed to load lists: ${error.message}`, 'error');
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadLists();
+            
+            // Enter key to search
+            document.getElementById('searchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchCompanies();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
