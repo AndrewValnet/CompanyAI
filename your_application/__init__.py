@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 """
-This is the file Render is looking for: your_application.py
-Render is hardcoded to run 'gunicorn your_application.wsgi'
-So we'll give it exactly what it wants.
+Package initialization for your_application
+This creates the package structure that Render is looking for
 """
 
 import sys
 import os
 
 # Add the CompanyAI directory to the Python path
-companyai_path = os.path.join(os.path.dirname(__file__), 'CompanyAI')
+companyai_path = os.path.join(os.path.dirname(__file__), '..', 'CompanyAI')
 sys.path.insert(0, companyai_path)
 
 try:
@@ -27,9 +26,3 @@ except ImportError as e:
 except Exception as e:
     print(f"Unexpected error: {e}")
     raise
-
-if __name__ == "__main__":
-    import uvicorn
-    port = int(os.environ.get("PORT", 8000))
-    print(f"Starting uvicorn on port {port}")
-    uvicorn.run(app, host="0.0.0.0", port=port)
