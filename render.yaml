@@ -11,12 +11,12 @@ services:
       - key: PYTHON_VERSION
         value: 3.9.16
       - key: DB_HOST
-        value: localhost
+        value: your-actual-db-host
       - key: DB_NAME
-        value: CompanyAI
+        value: your-actual-db-name
       - key: DB_USER
-        value: postgres
+        value: your-actual-db-user
       - key: DB_PASSWORD
-        value: password
+        value: your-actual-db-password
       - key: DB_PORT
         value: 5432
