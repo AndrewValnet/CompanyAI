@@ -15,8 +15,8 @@ try:
     # Import the FastAPI app
     from gpt_api_endpoints import app
     
-    # For WSGI compatibility, we need to expose the app
-    # This is what Gunicorn will look for
+    # For ASGI compatibility, expose the FastAPI app directly
+    # Uvicorn will handle this natively
     application = app
     
 except ImportError as e:
