@@ -4,7 +4,8 @@ services:
     env: python
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn gpt_api_endpoints:app --host 0.0.0.0 --port $PORT
+    startCommand: python -m uvicorn gpt_api_endpoints:app --host 0.0.0.0 --port $PORT
+    workingDirectory: .
     envVars:
       - key: PYTHON_VERSION
         value: 3.9.16
