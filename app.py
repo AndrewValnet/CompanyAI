@@ -583,6 +583,7 @@ async def import_csv_data():
         cursor = conn.cursor()
         
         imported_count = 0
+        error_count = 0
         csv_files = [
             "CompanyAI/AI_Andrew_Outreach_List.csv",
             "CompanyAI/SW_List_Andrew.csv"
@@ -595,72 +596,116 @@ async def import_csv_data():
                 
             print(f"Processing CSV file: {csv_file}")
             
-            with open(csv_file, 'r', encoding='utf-8') as file:
-                csv_reader = csv.DictReader(file)
-                
-                for row in csv_reader:
-                    try:
-                        # Map CSV columns to database columns based on actual CSV structure
-                        company_data = {
-                            "name": row.get("Company Name", row.get("name", row.get("Name", row.get("company_name", "")))),
-                            "website": row.get("Website", row.get("Domain", row.get("website", row.get("domain", "")))),
-                            "vertical": row.get("Vertical", row.get("vertical", row.get("category", ""))),
-                            "subvertical": row.get("Subvertical", row.get("subvertical", "")),
-                            "description": row.get("Description", row.get("description", "")),
-                            "location": row.get("Location", row.get("location", "")),
-                            "monthly_visits": int(row.get("Monthly Visits", row.get("monthly_visits", "0")).replace(",", "") or 0),
-                            "unique_visitors": int(row.get("Unique Visitors", row.get("unique_visitors", "0")).replace(",", "") or 0),
-                            "visit_duration": row.get("Visit Duration", row.get("visit_duration", "")),
-                            "pages_per_visit": float(row.get("Pages / Visit", row.get("pages_per_visit", "0")) or 0),
-                            "adsense_enabled": row.get("AdSense", row.get("adsense_enabled", "")).lower() in ["true", "yes", "1"],
-                            "us_percentage": float(row.get("US %", row.get("us_percentage", "0")).replace("%", "") or 0),
-                            "reached_out": row.get("reached_out", "").lower() in ["true", "yes", "1"],
-                            "reached_out_date": row.get("reached_out_date", None),
-                            "response_status": row.get("response_status", row.get("Response Status", ""))
-                        }
-                        
-                        # Skip if no name or website
-                        if not company_data["name"] or not company_data["website"]:
-                            continue
-                        
-                        # Insert into database
-                        insert_sql = """
-                        INSERT INTO all_companies 
-                        (name, website, vertical, subvertical, description, location, 
-                         monthly_visits, unique_visitors, visit_duration, pages_per_visit, 
-                         adsense_enabled, us_percentage, reached_out, reached_out_date, response_status)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                        ON CONFLICT (website) DO NOTHING
-                        """
-                        
-                        cursor.execute(insert_sql, (
-                            company_data["name"],
-                            company_data["website"],
-                            company_data["vertical"],
-                            company_data["subvertical"],
-                            company_data["description"],
-                            company_data["location"],
-                            company_data["monthly_visits"],
-                            company_data["unique_visitors"],
-                            company_data["visit_duration"],
-                            company_data["pages_per_visit"],
-                            company_data["adsense_enabled"],
-                            company_data["us_percentage"],
-                            company_data["reached_out"],
-                            company_data["reached_out_date"],
-                            company_data["response_status"]
-                        ))
-                        
-                        imported_count += 1
-                        
-                        # Commit every 100 records
-                        if imported_count % 100 == 0:
-                            conn.commit()
-                            print(f"Imported {imported_count} companies so far...")
+            try:
+                with open(csv_file, 'r', encoding='utf-8') as file:
+                    csv_reader = csv.DictReader(file)
+                    
+                    for row_num, row in enumerate(csv_reader, 1):
+                        try:
+                            # Map CSV columns to database columns based on actual CSV structure
+                            company_data = {
+                                "name": row.get("Company Name", row.get("name", row.get("Name", row.get("company_name", "")))),
+                                "website": row.get("Website", row.get("Domain", row.get("website", row.get("domain", "")))),
+                                "vertical": row.get("Vertical", row.get("vertical", row.get("category", ""))),
+                                "subvertical": row.get("Subvertical", row.get("subvertical", "")),
+                                "description": row.get("Description", row.get("description", "")),
+                                "location": row.get("Location", row.get("location", "")),
+                                "monthly_visits": 0,
+                                "unique_visitors": 0,
+                                "visit_duration": row.get("Visit Duration", row.get("visit_duration", "")),
+                                "pages_per_visit": 0.0,
+                                "adsense_enabled": False,
+                                "us_percentage": 0.0,
+                                "reached_out": False,
+                                "reached_out_date": None,
+                                "response_status": ""
+                            }
                             
-                    except Exception as row_error:
-                        print(f"Error processing row: {row_error}")
-                        continue
+                            # Safely parse numeric fields
+                            try:
+                                monthly_visits_str = row.get("Monthly Visits", row.get("monthly_visits", "0"))
+                                if monthly_visits_str:
+                                    monthly_visits_str = str(monthly_visits_str).replace(",", "").replace(".", "")
+                                    company_data["monthly_visits"] = int(monthly_visits_str) if monthly_visits_str.isdigit() else 0
+                            except:
+                                company_data["monthly_visits"] = 0
+                            
+                            try:
+                                unique_visitors_str = row.get("Unique Visitors", row.get("unique_visitors", "0"))
+                                if unique_visitors_str:
+                                    unique_visitors_str = str(unique_visitors_str).replace(",", "").replace(".", "")
+                                    company_data["unique_visitors"] = int(unique_visitors_str) if unique_visitors_str.isdigit() else 0
+                            except:
+                                company_data["unique_visitors"] = 0
+                            
+                            try:
+                                pages_per_visit_str = row.get("Pages / Visit", row.get("pages_per_visit", "0"))
+                                if pages_per_visit_str:
+                                    company_data["pages_per_visit"] = float(pages_per_visit_str) if pages_per_visit_str.replace(".", "").isdigit() else 0.0
+                            except:
+                                company_data["pages_per_visit"] = 0.0
+                            
+                            try:
+                                us_percentage_str = row.get("US %", row.get("us_percentage", "0"))
+                                if us_percentage_str:
+                                    us_percentage_str = str(us_percentage_str).replace("%", "").replace(",", "")
+                                    company_data["us_percentage"] = float(us_percentage_str) if us_percentage_str.replace(".", "").isdigit() else 0.0
+                            except:
+                                company_data["us_percentage"] = 0.0
+                            
+                            # Parse boolean fields
+                            adsense_str = row.get("AdSense", row.get("adsense_enabled", ""))
+                            company_data["adsense_enabled"] = str(adsense_str).lower() in ["true", "yes", "1"]
+                            
+                            # Skip if no name or website
+                            if not company_data["name"] or not company_data["website"]:
+                                continue
+                            
+                            # Insert into database
+                            insert_sql = """
+                            INSERT INTO all_companies 
+                            (name, website, vertical, subvertical, description, location, 
+                             monthly_visits, unique_visitors, visit_duration, pages_per_visit, 
+                             adsense_enabled, us_percentage, reached_out, reached_out_date, response_status)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                            ON CONFLICT (website) DO NOTHING
+                            """
+                            
+                            cursor.execute(insert_sql, (
+                                company_data["name"],
+                                company_data["website"],
+                                company_data["vertical"],
+                                company_data["subvertical"],
+                                company_data["description"],
+                                company_data["location"],
+                                company_data["monthly_visits"],
+                                company_data["unique_visitors"],
+                                company_data["visit_duration"],
+                                company_data["pages_per_visit"],
+                                company_data["adsense_enabled"],
+                                company_data["us_percentage"],
+                                company_data["reached_out"],
+                                company_data["reached_out_date"],
+                                company_data["response_status"]
+                            ))
+                            
+                            imported_count += 1
+                            
+                            # Commit every 50 records to avoid memory issues
+                            if imported_count % 50 == 0:
+                                conn.commit()
+                                print(f"Imported {imported_count} companies so far...")
+                                
+                        except Exception as row_error:
+                            error_count += 1
+                            print(f"Error processing row {row_num}: {row_error}")
+                            if error_count > 100:  # Stop if too many errors
+                                break
+                            continue
+                            
+            except Exception as file_error:
+                print(f"Error reading file {csv_file}: {file_error}")
+                continue
         
         conn.commit()
         
@@ -676,6 +721,7 @@ async def import_csv_data():
             "message": f"CSV data imported successfully!",
             "imported_companies": imported_count,
             "total_companies": total_count,
+            "error_count": error_count,
             "processed_files": [f for f in csv_files if os.path.exists(f)]
         }
         
