@@ -596,24 +596,23 @@ async def import_csv_data():
                 
                 for row in csv_reader:
                     try:
-                        # Map CSV columns to database columns
-                        # Adjust these mappings based on your actual CSV structure
+                        # Map CSV columns to database columns based on actual CSV structure
                         company_data = {
-                            "name": row.get("name", row.get("Name", row.get("company_name", ""))),
-                            "website": row.get("website", row.get("Website", row.get("domain", ""))),
-                            "vertical": row.get("vertical", row.get("Vertical", row.get("category", ""))),
-                            "subvertical": row.get("subvertical", row.get("Subvertical", "")),
-                            "description": row.get("description", row.get("Description", "")),
-                            "location": row.get("location", row.get("Location", "")),
-                            "monthly_visits": int(row.get("monthly_visits", row.get("Monthly Visits", "0")) or 0),
-                            "unique_visitors": int(row.get("unique_visitors", row.get("Unique Visitors", "0")) or 0),
-                            "visit_duration": row.get("visit_duration", row.get("Visit Duration", "")),
-                            "pages_per_visit": float(row.get("pages_per_visit", row.get("Pages per Visit", "0")) or 0),
-                            "adsense_enabled": row.get("adsense_enabled", "").lower() in ["true", "yes", "1"],
-                            "us_percentage": float(row.get("us_percentage", row.get("US Percentage", "0")) or 0),
-                            "reached_out": row.get("reached_out", "").lower() in ["true", "yes", "1"],
-                            "reached_out_date": row.get("reached_out_date", None),
-                            "response_status": row.get("response_status", row.get("Response Status", ""))
+                            "name": row.get("Company Name", row.get("name", "")),
+                            "website": row.get("Website", row.get("Domain", row.get("website", ""))),
+                            "vertical": row.get("Vertical", row.get("vertical", "")),
+                            "subvertical": row.get("Subvertical", row.get("subvertical", "")),
+                            "description": row.get("Description", row.get("description", "")),
+                            "location": row.get("Location", row.get("location", "")),
+                            "monthly_visits": int(str(row.get("Monthly Visits", "0")).replace(",", "").replace(".", "").split(".")[0] or 0),
+                            "unique_visitors": int(str(row.get("Unique Visitors", "0")).replace(",", "").replace(".", "").split(".")[0] or 0),
+                            "visit_duration": row.get("Visit Duration", row.get("visit_duration", "")),
+                            "pages_per_visit": float(row.get("Pages / Visit", row.get("pages_per_visit", "0")) or 0),
+                            "adsense_enabled": row.get("AdSense", row.get("adsense_enabled", "")).lower() in ["true", "yes", "1"],
+                            "us_percentage": float(str(row.get("US %", "0")).replace("%", "") or 0),
+                            "reached_out": False,  # Default to False since not in CSV
+                            "reached_out_date": None,  # Default to None since not in CSV
+                            "response_status": ""  # Default to empty since not in CSV
                         }
                         
                         # Skip if no name or website
