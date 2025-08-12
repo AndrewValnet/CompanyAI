@@ -624,33 +624,54 @@ async def import_csv_data():
                             # Safely parse numeric fields
                             try:
                                 monthly_visits_str = row.get("Monthly Visits", row.get("monthly_visits", "0"))
-                                if monthly_visits_str:
-                                    monthly_visits_str = str(monthly_visits_str).replace(",", "").replace(".", "")
-                                    company_data["monthly_visits"] = int(monthly_visits_str) if monthly_visits_str.isdigit() else 0
-                            except:
+                                if monthly_visits_str and str(monthly_visits_str).strip():
+                                    # Handle cases like "7,000,000" or "1,175,754,959.88"
+                                    monthly_visits_str = str(monthly_visits_str).replace(",", "")
+                                    if "." in monthly_visits_str:
+                                        # Handle decimal numbers by converting to float first
+                                        company_data["monthly_visits"] = int(float(monthly_visits_str))
+                                    else:
+                                        company_data["monthly_visits"] = int(monthly_visits_str)
+                                else:
+                                    company_data["monthly_visits"] = 0
+                            except Exception as e:
+                                print(f"Error parsing monthly_visits '{monthly_visits_str}': {e}")
                                 company_data["monthly_visits"] = 0
                             
                             try:
                                 unique_visitors_str = row.get("Unique Visitors", row.get("unique_visitors", "0"))
-                                if unique_visitors_str:
-                                    unique_visitors_str = str(unique_visitors_str).replace(",", "").replace(".", "")
-                                    company_data["unique_visitors"] = int(unique_visitors_str) if unique_visitors_str.isdigit() else 0
-                            except:
+                                if unique_visitors_str and str(unique_visitors_str).strip():
+                                    # Handle cases like "80,117,090.18"
+                                    unique_visitors_str = str(unique_visitors_str).replace(",", "")
+                                    if "." in unique_visitors_str:
+                                        company_data["unique_visitors"] = int(float(unique_visitors_str))
+                                    else:
+                                        company_data["unique_visitors"] = int(unique_visitors_str)
+                                else:
+                                    company_data["unique_visitors"] = 0
+                            except Exception as e:
+                                print(f"Error parsing unique_visitors '{unique_visitors_str}': {e}")
                                 company_data["unique_visitors"] = 0
                             
                             try:
                                 pages_per_visit_str = row.get("Pages / Visit", row.get("pages_per_visit", "0"))
-                                if pages_per_visit_str:
-                                    company_data["pages_per_visit"] = float(pages_per_visit_str) if pages_per_visit_str.replace(".", "").isdigit() else 0.0
-                            except:
+                                if pages_per_visit_str and str(pages_per_visit_str).strip():
+                                    company_data["pages_per_visit"] = float(pages_per_visit_str)
+                                else:
+                                    company_data["pages_per_visit"] = 0.0
+                            except Exception as e:
+                                print(f"Error parsing pages_per_visit '{pages_per_visit_str}': {e}")
                                 company_data["pages_per_visit"] = 0.0
                             
                             try:
                                 us_percentage_str = row.get("US %", row.get("us_percentage", "0"))
-                                if us_percentage_str:
+                                if us_percentage_str and str(us_percentage_str).strip():
                                     us_percentage_str = str(us_percentage_str).replace("%", "").replace(",", "")
-                                    company_data["us_percentage"] = float(us_percentage_str) if us_percentage_str.replace(".", "").isdigit() else 0.0
-                            except:
+                                    company_data["us_percentage"] = float(us_percentage_str)
+                                else:
+                                    company_data["us_percentage"] = 0.0
+                            except Exception as e:
+                                print(f"Error parsing us_percentage '{us_percentage_str}': {e}")
                                 company_data["us_percentage"] = 0.0
                             
                             # Parse boolean fields
@@ -698,8 +719,10 @@ async def import_csv_data():
                                 
                         except Exception as row_error:
                             error_count += 1
-                            print(f"Error processing row {row_num}: {row_error}")
-                            if error_count > 100:  # Stop if too many errors
+                            print(f"Error processing row {row_num} in {csv_file}: {row_error}")
+                            print(f"Row data: {dict(row)}")
+                            if error_count > 500:  # Increased error limit
+                                print(f"Stopping due to too many errors ({error_count})")
                                 break
                             continue
                             
