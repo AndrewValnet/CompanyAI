@@ -41,21 +41,19 @@ def get_db_connection():
     print(f"Attempting to connect to database: {host}:{port}/{dbname} as {user}")
     
     try:
-        conn = psycopg.connect(
-            host=host,
-            dbname=dbname,
-            user=user,
-            password=password,
-            port=port,
-            connect_timeout=10,  # 10 second timeout
-            sslmode="require"    # Require SSL for Render PostgreSQL
-        )
+        # Try using connection string first
+        connection_string = f"postgresql://{user}:{password}@{host}:{port}/{dbname}?sslmode=require"
+        print(f"Trying connection string: postgresql://{user}:***@{host}:{port}/{dbname}?sslmode=require")
+        
+        conn = psycopg.connect(connection_string, connect_timeout=10)
         print("Database connection successful!")
         return conn
     except Exception as e:
         print(f"Database connection failed: {e}")
         print(f"Connection details: {host}:{port}/{dbname} as {user}")
-        print(f"SSL mode: disable")
+        print(f"SSL mode: require")
+        print(f"Password length: {len(password)}")
+        print(f"Password starts with: {password[:10]}...")
         raise
 
 @app.get("/", response_class=HTMLResponse)
