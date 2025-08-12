@@ -10,6 +10,7 @@ import psycopg
 from psycopg.rows import dict_row
 from typing import List, Optional
 import os
+import csv
 from dotenv import load_dotenv
 from urllib.parse import quote_plus
 
@@ -363,7 +364,9 @@ async def gpt_health():
             "/gpt/companies/reached-out", 
             "/gpt/companies/stats",
             "/gpt/health",
-            "/setup-database"
+            "/setup-database",
+            "/populate-sample-data",
+            "/import-csv-data"
         ]
     }
 
@@ -416,6 +419,249 @@ async def setup_database():
             "success": False,
             "error": str(e),
             "message": "Failed to setup database table"
+        }
+
+@app.get("/populate-sample-data")
+async def populate_sample_data():
+    """Add sample company data to the database"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Sample company data
+        sample_companies = [
+            {
+                "name": "TechCorp Solutions",
+                "website": "techcorp-solutions.com",
+                "vertical": "Technology",
+                "subvertical": "Software Development",
+                "description": "Leading software development company specializing in enterprise solutions",
+                "location": "San Francisco, CA",
+                "monthly_visits": 50000,
+                "unique_visitors": 35000,
+                "pages_per_visit": 3.2,
+                "adsense_enabled": True,
+                "reached_out": False
+            },
+            {
+                "name": "GreenEnergy Innovations",
+                "website": "greenenergy-innovations.com",
+                "vertical": "Energy",
+                "subvertical": "Renewable Energy",
+                "description": "Pioneering renewable energy solutions for a sustainable future",
+                "location": "Austin, TX",
+                "monthly_visits": 25000,
+                "unique_visitors": 18000,
+                "pages_per_visit": 2.8,
+                "adsense_enabled": False,
+                "reached_out": True,
+                "reached_out_date": "2024-01-15",
+                "response_status": "Interested"
+            },
+            {
+                "name": "HealthTech Pro",
+                "website": "healthtech-pro.com",
+                "vertical": "Healthcare",
+                "subvertical": "Digital Health",
+                "description": "Digital health platform connecting patients with healthcare providers",
+                "location": "Boston, MA",
+                "monthly_visits": 75000,
+                "unique_visitors": 52000,
+                "pages_per_visit": 4.1,
+                "adsense_enabled": True,
+                "reached_out": False
+            },
+            {
+                "name": "EduLearn Academy",
+                "website": "edulearn-academy.com",
+                "vertical": "Education",
+                "subvertical": "Online Learning",
+                "description": "Comprehensive online learning platform for professional development",
+                "location": "Seattle, WA",
+                "monthly_visits": 120000,
+                "unique_visitors": 85000,
+                "pages_per_visit": 5.3,
+                "adsense_enabled": True,
+                "reached_out": True,
+                "reached_out_date": "2024-02-01",
+                "response_status": "No Response"
+            },
+            {
+                "name": "FinTech Solutions",
+                "website": "fintech-solutions.com",
+                "vertical": "Finance",
+                "subvertical": "Financial Technology",
+                "description": "Innovative financial technology solutions for modern banking",
+                "location": "New York, NY",
+                "monthly_visits": 95000,
+                "unique_visitors": 68000,
+                "pages_per_visit": 3.9,
+                "adsense_enabled": False,
+                "reached_out": False
+            }
+        ]
+        
+        # Insert sample data
+        insert_sql = """
+        INSERT INTO all_companies 
+        (name, website, vertical, subvertical, description, location, 
+         monthly_visits, unique_visitors, pages_per_visit, adsense_enabled, 
+         reached_out, reached_out_date, response_status)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        
+        inserted_count = 0
+        for company in sample_companies:
+            try:
+                cursor.execute(insert_sql, (
+                    company["name"],
+                    company["website"],
+                    company["vertical"],
+                    company["subvertical"],
+                    company["description"],
+                    company["location"],
+                    company["monthly_visits"],
+                    company["unique_visitors"],
+                    company["pages_per_visit"],
+                    company["adsense_enabled"],
+                    company["reached_out"],
+                    company.get("reached_out_date"),
+                    company.get("response_status")
+                ))
+                inserted_count += 1
+            except Exception as insert_error:
+                print(f"Error inserting {company['name']}: {insert_error}")
+                continue
+        
+        conn.commit()
+        
+        # Get final count
+        cursor.execute("SELECT COUNT(*) as count FROM all_companies")
+        total_count = cursor.fetchone()[0]
+        
+        cursor.close()
+        conn.close()
+        
+        return {
+            "success": True,
+            "message": f"Sample data populated successfully!",
+            "inserted_companies": inserted_count,
+            "total_companies": total_count
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "message": "Failed to populate sample data"
+        }
+
+@app.get("/import-csv-data")
+async def import_csv_data():
+    """Import company data from CSV files"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        imported_count = 0
+        csv_files = [
+            "CompanyAI/AI_Andrew_Outreach_List.csv",
+            "CompanyAI/SW_List_Andrew.csv"
+        ]
+        
+        for csv_file in csv_files:
+            if not os.path.exists(csv_file):
+                print(f"CSV file not found: {csv_file}")
+                continue
+                
+            print(f"Processing CSV file: {csv_file}")
+            
+            with open(csv_file, 'r', encoding='utf-8') as file:
+                csv_reader = csv.DictReader(file)
+                
+                for row in csv_reader:
+                    try:
+                        # Map CSV columns to database columns
+                        # Adjust these mappings based on your actual CSV structure
+                        company_data = {
+                            "name": row.get("name", row.get("Name", row.get("company_name", ""))),
+                            "website": row.get("website", row.get("Website", row.get("domain", ""))),
+                            "vertical": row.get("vertical", row.get("Vertical", row.get("category", ""))),
+                            "subvertical": row.get("subvertical", row.get("Subvertical", "")),
+                            "description": row.get("description", row.get("Description", "")),
+                            "location": row.get("location", row.get("Location", "")),
+                            "monthly_visits": int(row.get("monthly_visits", row.get("Monthly Visits", "0")) or 0),
+                            "unique_visitors": int(row.get("unique_visitors", row.get("Unique Visitors", "0")) or 0),
+                            "pages_per_visit": float(row.get("pages_per_visit", row.get("Pages per Visit", "0")) or 0),
+                            "adsense_enabled": row.get("adsense_enabled", "").lower() in ["true", "yes", "1"],
+                            "reached_out": row.get("reached_out", "").lower() in ["true", "yes", "1"],
+                            "reached_out_date": row.get("reached_out_date", None),
+                            "response_status": row.get("response_status", row.get("Response Status", ""))
+                        }
+                        
+                        # Skip if no name or website
+                        if not company_data["name"] or not company_data["website"]:
+                            continue
+                        
+                        # Insert into database
+                        insert_sql = """
+                        INSERT INTO all_companies 
+                        (name, website, vertical, subvertical, description, location, 
+                         monthly_visits, unique_visitors, pages_per_visit, adsense_enabled, 
+                         reached_out, reached_out_date, response_status)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                        ON CONFLICT (website) DO NOTHING
+                        """
+                        
+                        cursor.execute(insert_sql, (
+                            company_data["name"],
+                            company_data["website"],
+                            company_data["vertical"],
+                            company_data["subvertical"],
+                            company_data["description"],
+                            company_data["location"],
+                            company_data["monthly_visits"],
+                            company_data["unique_visitors"],
+                            company_data["pages_per_visit"],
+                            company_data["adsense_enabled"],
+                            company_data["reached_out"],
+                            company_data["reached_out_date"],
+                            company_data["response_status"]
+                        ))
+                        
+                        imported_count += 1
+                        
+                        # Commit every 100 records
+                        if imported_count % 100 == 0:
+                            conn.commit()
+                            print(f"Imported {imported_count} companies so far...")
+                            
+                    except Exception as row_error:
+                        print(f"Error processing row: {row_error}")
+                        continue
+        
+        conn.commit()
+        
+        # Get final count
+        cursor.execute("SELECT COUNT(*) as count FROM all_companies")
+        total_count = cursor.fetchone()[0]
+        
+        cursor.close()
+        conn.close()
+        
+        return {
+            "success": True,
+            "message": f"CSV data imported successfully!",
+            "imported_companies": imported_count,
+            "total_companies": total_count,
+            "processed_files": [f for f in csv_files if os.path.exists(f)]
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "message": "Failed to import CSV data"
         }
 
 if __name__ == "__main__":
