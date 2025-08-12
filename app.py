@@ -48,15 +48,14 @@ def get_db_connection():
             password=password,
             port=port,
             connect_timeout=10,  # 10 second timeout
-            sslmode="require",   # Require SSL for Render database
-            sslcert=None,        # No client certificate
-            sslkey=None,         # No client key
-            sslrootcert=None     # No root certificate
+            sslmode="disable"    # Disable SSL completely
         )
         print("Database connection successful!")
         return conn
     except Exception as e:
         print(f"Database connection failed: {e}")
+        print(f"Connection details: {host}:{port}/{dbname} as {user}")
+        print(f"SSL mode: disable")
         raise
 
 @app.get("/", response_class=HTMLResponse)
