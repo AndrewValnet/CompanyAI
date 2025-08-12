@@ -48,7 +48,7 @@ def get_db_connection():
             password=password,
             port=port,
             connect_timeout=10,  # 10 second timeout
-            sslmode="disable"    # Disable SSL completely
+            sslmode="require"    # Require SSL for Render PostgreSQL
         )
         print("Database connection successful!")
         return conn
