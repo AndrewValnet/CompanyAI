@@ -366,7 +366,8 @@ async def gpt_health():
             "/gpt/health",
             "/setup-database",
             "/populate-sample-data",
-            "/import-csv-data"
+            "/import-csv-data",
+            "/debug-csv-files"
         ]
     }
 
@@ -680,6 +681,66 @@ async def import_csv_data():
             "success": False,
             "error": str(e),
             "message": "Failed to import CSV data"
+        }
+
+@app.get("/debug-csv-files")
+async def debug_csv_files():
+    """Debug endpoint to check CSV files and their structure"""
+    try:
+        csv_files = [
+            "CompanyAI/AI_Andrew_Outreach_List.csv",
+            "CompanyAI/SW_List_Andrew.csv"
+        ]
+        
+        debug_info = {
+            "current_working_directory": os.getcwd(),
+            "files_exist": {},
+            "file_sizes": {},
+            "sample_rows": {},
+            "column_headers": {}
+        }
+        
+        for csv_file in csv_files:
+            file_exists = os.path.exists(csv_file)
+            debug_info["files_exist"][csv_file] = file_exists
+            
+            if file_exists:
+                # Get file size
+                file_size = os.path.getsize(csv_file)
+                debug_info["file_sizes"][csv_file] = f"{file_size:,} bytes"
+                
+                # Read first few rows to get headers and sample data
+                try:
+                    with open(csv_file, 'r', encoding='utf-8') as file:
+                        csv_reader = csv.DictReader(file)
+                        
+                        # Get column headers
+                        debug_info["column_headers"][csv_file] = csv_reader.fieldnames
+                        
+                        # Get first 3 rows as sample
+                        sample_rows = []
+                        for i, row in enumerate(csv_reader):
+                            if i < 3:  # Only first 3 rows
+                                sample_rows.append(row)
+                            else:
+                                break
+                        
+                        debug_info["sample_rows"][csv_file] = sample_rows
+                        
+                except Exception as read_error:
+                    debug_info["sample_rows"][csv_file] = f"Error reading file: {read_error}"
+                    debug_info["column_headers"][csv_file] = f"Error reading headers: {read_error}"
+        
+        return {
+            "success": True,
+            "debug_info": debug_info
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "message": "Failed to debug CSV files"
         }
 
 if __name__ == "__main__":
