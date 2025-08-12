@@ -33,6 +33,18 @@ app.add_middleware(
 
 # Database connection
 def get_db_connection():
+    # Try using the exact External Database URL first
+    external_url = os.getenv("EXTERNAL_DATABASE_URL")
+    if external_url:
+        print(f"Trying External Database URL: {external_url.replace(external_url.split('@')[0].split(':')[2], '***')}")
+        try:
+            conn = psycopg.connect(external_url, connect_timeout=10)
+            print("Database connection successful with External Database URL!")
+            return conn
+        except Exception as url_error:
+            print(f"External Database URL failed: {url_error}")
+    
+    # Fallback to individual environment variables
     host = os.getenv("DB_HOST", "localhost")
     dbname = os.getenv("DB_NAME", "CompanyAI")
     user = os.getenv("DB_USER", "postgres")
