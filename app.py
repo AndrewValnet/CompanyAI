@@ -383,14 +383,16 @@ async def setup_database():
             id SERIAL PRIMARY KEY,
             name VARCHAR(255),
             website VARCHAR(255),
-            vertical VARCHAR(100),
-            subvertical VARCHAR(100),
+            vertical VARCHAR(255),
+            subvertical VARCHAR(255),
             description TEXT,
-            location VARCHAR(100),
-            monthly_visits INTEGER,
-            unique_visitors INTEGER,
-            pages_per_visit DECIMAL(5,2),
+            location VARCHAR(255),
+            monthly_visits BIGINT,
+            unique_visitors BIGINT,
+            visit_duration VARCHAR(50),
+            pages_per_visit NUMERIC(10,2),
             adsense_enabled BOOLEAN DEFAULT FALSE,
+            us_percentage NUMERIC(5,2),
             reached_out BOOLEAN DEFAULT FALSE,
             reached_out_date TIMESTAMP,
             response_status VARCHAR(50)
@@ -439,8 +441,10 @@ async def populate_sample_data():
                 "location": "San Francisco, CA",
                 "monthly_visits": 50000,
                 "unique_visitors": 35000,
+                "visit_duration": "00:03:45",
                 "pages_per_visit": 3.2,
                 "adsense_enabled": True,
+                "us_percentage": 85.5,
                 "reached_out": False
             },
             {
@@ -452,8 +456,10 @@ async def populate_sample_data():
                 "location": "Austin, TX",
                 "monthly_visits": 25000,
                 "unique_visitors": 18000,
+                "visit_duration": "00:02:30",
                 "pages_per_visit": 2.8,
                 "adsense_enabled": False,
+                "us_percentage": 92.3,
                 "reached_out": True,
                 "reached_out_date": "2024-01-15",
                 "response_status": "Interested"
@@ -467,8 +473,10 @@ async def populate_sample_data():
                 "location": "Boston, MA",
                 "monthly_visits": 75000,
                 "unique_visitors": 52000,
+                "visit_duration": "00:04:15",
                 "pages_per_visit": 4.1,
                 "adsense_enabled": True,
+                "us_percentage": 78.9,
                 "reached_out": False
             },
             {
@@ -480,8 +488,10 @@ async def populate_sample_data():
                 "location": "Seattle, WA",
                 "monthly_visits": 120000,
                 "unique_visitors": 85000,
+                "visit_duration": "00:06:20",
                 "pages_per_visit": 5.3,
                 "adsense_enabled": True,
+                "us_percentage": 88.7,
                 "reached_out": True,
                 "reached_out_date": "2024-02-01",
                 "response_status": "No Response"
@@ -495,8 +505,10 @@ async def populate_sample_data():
                 "location": "New York, NY",
                 "monthly_visits": 95000,
                 "unique_visitors": 68000,
+                "visit_duration": "00:03:55",
                 "pages_per_visit": 3.9,
                 "adsense_enabled": False,
+                "us_percentage": 91.2,
                 "reached_out": False
             }
         ]
@@ -505,9 +517,9 @@ async def populate_sample_data():
         insert_sql = """
         INSERT INTO all_companies 
         (name, website, vertical, subvertical, description, location, 
-         monthly_visits, unique_visitors, pages_per_visit, adsense_enabled, 
-         reached_out, reached_out_date, response_status)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+         monthly_visits, unique_visitors, visit_duration, pages_per_visit, 
+         adsense_enabled, us_percentage, reached_out, reached_out_date, response_status)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         
         inserted_count = 0
@@ -522,8 +534,10 @@ async def populate_sample_data():
                     company["location"],
                     company["monthly_visits"],
                     company["unique_visitors"],
+                    company["visit_duration"],
                     company["pages_per_visit"],
                     company["adsense_enabled"],
+                    company["us_percentage"],
                     company["reached_out"],
                     company.get("reached_out_date"),
                     company.get("response_status")
@@ -592,8 +606,10 @@ async def import_csv_data():
                             "location": row.get("location", row.get("Location", "")),
                             "monthly_visits": int(row.get("monthly_visits", row.get("Monthly Visits", "0")) or 0),
                             "unique_visitors": int(row.get("unique_visitors", row.get("Unique Visitors", "0")) or 0),
+                            "visit_duration": row.get("visit_duration", row.get("Visit Duration", "")),
                             "pages_per_visit": float(row.get("pages_per_visit", row.get("Pages per Visit", "0")) or 0),
                             "adsense_enabled": row.get("adsense_enabled", "").lower() in ["true", "yes", "1"],
+                            "us_percentage": float(row.get("us_percentage", row.get("US Percentage", "0")) or 0),
                             "reached_out": row.get("reached_out", "").lower() in ["true", "yes", "1"],
                             "reached_out_date": row.get("reached_out_date", None),
                             "response_status": row.get("response_status", row.get("Response Status", ""))
@@ -607,9 +623,9 @@ async def import_csv_data():
                         insert_sql = """
                         INSERT INTO all_companies 
                         (name, website, vertical, subvertical, description, location, 
-                         monthly_visits, unique_visitors, pages_per_visit, adsense_enabled, 
-                         reached_out, reached_out_date, response_status)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                         monthly_visits, unique_visitors, visit_duration, pages_per_visit, 
+                         adsense_enabled, us_percentage, reached_out, reached_out_date, response_status)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                         ON CONFLICT (website) DO NOTHING
                         """
                         
@@ -622,8 +638,10 @@ async def import_csv_data():
                             company_data["location"],
                             company_data["monthly_visits"],
                             company_data["unique_visitors"],
+                            company_data["visit_duration"],
                             company_data["pages_per_visit"],
                             company_data["adsense_enabled"],
+                            company_data["us_percentage"],
                             company_data["reached_out"],
                             company_data["reached_out_date"],
                             company_data["response_status"]
