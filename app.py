@@ -11,6 +11,7 @@ from psycopg.rows import dict_row
 from typing import List, Optional
 import os
 from dotenv import load_dotenv
+from urllib.parse import quote_plus
 
 load_dotenv()
 
@@ -41,13 +42,32 @@ def get_db_connection():
     print(f"Attempting to connect to database: {host}:{port}/{dbname} as {user}")
     
     try:
-        # Try using connection string first
-        connection_string = f"postgresql://{user}:{password}@{host}:{port}/{dbname}?sslmode=require"
+        # URL encode the password to handle special characters
+        encoded_password = quote_plus(password)
+        connection_string = f"postgresql://{user}:{encoded_password}@{host}:{port}/{dbname}?sslmode=require"
         print(f"Trying connection string: postgresql://{user}:***@{host}:{port}/{dbname}?sslmode=require")
+        print(f"Password encoded: {encoded_password}")
         
-        conn = psycopg.connect(connection_string, connect_timeout=10)
-        print("Database connection successful!")
-        return conn
+        try:
+            conn = psycopg.connect(connection_string, connect_timeout=10)
+            print("Database connection successful!")
+            return conn
+        except Exception as conn_string_error:
+            print(f"Connection string failed: {conn_string_error}")
+            print("Trying individual parameters...")
+            
+            # Fallback to individual parameters
+            conn = psycopg.connect(
+                host=host,
+                dbname=dbname,
+                user=user,
+                password=password,
+                port=port,
+                connect_timeout=10,
+                sslmode="require"
+            )
+            print("Database connection successful with individual parameters!")
+            return conn
     except Exception as e:
         print(f"Database connection failed: {e}")
         print(f"Connection details: {host}:{port}/{dbname} as {user}")
