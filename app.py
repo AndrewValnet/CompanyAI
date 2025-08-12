@@ -362,9 +362,61 @@ async def gpt_health():
             "/gpt/companies/search",
             "/gpt/companies/reached-out", 
             "/gpt/companies/stats",
-            "/gpt/health"
+            "/gpt/health",
+            "/setup-database"
         ]
     }
+
+@app.get("/setup-database")
+async def setup_database():
+    """Create the all_companies table if it doesn't exist"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Create the all_companies table
+        create_table_sql = """
+        CREATE TABLE IF NOT EXISTS all_companies (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(255),
+            website VARCHAR(255),
+            vertical VARCHAR(100),
+            subvertical VARCHAR(100),
+            description TEXT,
+            location VARCHAR(100),
+            monthly_visits INTEGER,
+            unique_visitors INTEGER,
+            pages_per_visit DECIMAL(5,2),
+            adsense_enabled BOOLEAN DEFAULT FALSE,
+            reached_out BOOLEAN DEFAULT FALSE,
+            reached_out_date TIMESTAMP,
+            response_status VARCHAR(50)
+        );
+        """
+        
+        cursor.execute(create_table_sql)
+        conn.commit()
+        
+        # Check if table was created
+        cursor.execute("SELECT COUNT(*) as count FROM all_companies")
+        count = cursor.fetchone()[0]
+        
+        cursor.close()
+        conn.close()
+        
+        return {
+            "success": True,
+            "message": "Database table created successfully!",
+            "table_name": "all_companies",
+            "current_records": count
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "message": "Failed to setup database table"
+        }
 
 if __name__ == "__main__":
     import uvicorn
