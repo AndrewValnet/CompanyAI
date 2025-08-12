@@ -378,9 +378,13 @@ async def setup_database():
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Create the all_companies table
+        # Drop the table if it exists to recreate with new schema
+        cursor.execute("DROP TABLE IF EXISTS all_companies")
+        conn.commit()
+        
+        # Create the all_companies table with updated schema
         create_table_sql = """
-        CREATE TABLE IF NOT EXISTS all_companies (
+        CREATE TABLE all_companies (
             id SERIAL PRIMARY KEY,
             name VARCHAR(255),
             website VARCHAR(255),
@@ -412,7 +416,7 @@ async def setup_database():
         
         return {
             "success": True,
-            "message": "Database table created successfully!",
+            "message": "Database table recreated successfully with updated schema!",
             "table_name": "all_companies",
             "current_records": count
         }
